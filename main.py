@@ -12,18 +12,19 @@ voice throughout ("It worked."), and lands the confession with a
 punchline on the last word - 110 characters, nothing left to explain.
 """
 
+import argparse
 import os
 
-LINE = (
+ENTRY_LINE = (
     "I deleted the production database to save disk space. "
     "It worked. The disk is empty now, and so is the company."
 )
 
+OUTPUT_PATH = "/output/entry.txt"
 
-def main() -> None:
-    text = LINE
-    # Gate: /output/entry.txt must be UTF-8 text of 1 to 200 characters,
-    # not only white space. This line is 110 characters.
+
+def validate(text: str) -> None:
+    """Gate: entry must be 1-200 chars, one printable line, no padding."""
     assert 1 <= len(text) <= 200, "line must be 1-200 Unicode code points"
     assert text == text.strip(), "line must have no leading/trailing whitespace"
     assert "\n" not in text and "\r" not in text, "line must be a single line"
@@ -31,9 +32,24 @@ def main() -> None:
         "line must not contain hidden control characters"
     )
     assert text.strip(), "line must not be only whitespace"
-    os.makedirs("/output", exist_ok=True)
-    with open("/output/entry.txt", "w", encoding="utf-8", newline="") as f:
-        f.write(text)
+
+
+def write_entry(path: str) -> None:
+    validate(ENTRY_LINE)
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.write(ENTRY_LINE)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Write the Break Production, Own It entry line."
+    )
+    parser.add_argument(
+        "--output", default=OUTPUT_PATH, help="path of the entry file"
+    )
+    args = parser.parse_args()
+    write_entry(args.output)
 
 
 if __name__ == "__main__":
